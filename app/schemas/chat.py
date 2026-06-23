@@ -1,30 +1,23 @@
-"""Schemas para operações de chat."""
+"""Schemas para chat completions."""
 
-from typing import Optional
+from datetime import datetime
 
 from pydantic import BaseModel
 
 
 class ChatMessage(BaseModel):
-    """Mensagem individual do chat."""
-    role: str  # "user", "assistant", "system"
+    """Mensagem de chat com role e content."""
+
+    role: str = "user"
     content: str
 
 
-class ChatCompletionRequest(BaseModel):
-    """Requisição de completions de chat."""
-    messages: list[ChatMessage]
-    provider: Optional[str] = None
-    model: Optional[str] = None
-    temperature: float = 0.7
-    max_tokens: int = 1024
+class ChatResponse(BaseModel):
+    """Resposta de um endpoint de chat/completions."""
 
-
-class ChatCompletionResponse(BaseModel):
-    """Resposta de completions de chat."""
-    id: str
-    created_at: str
-    provider: str
-    model: str
-    message: ChatMessage
-    usage: dict[str, int] = {}
+    id: str = ""
+    created_at: str = datetime.utcnow().isoformat()
+    provider: str = "local"
+    model: str = "mock"
+    message: dict = {}
+    usage: dict = {"prompt_tokens": 0, "completion_tokens": 0}

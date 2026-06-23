@@ -1,38 +1,22 @@
-"""Schemas comuns de resposta da API."""
+"""Schemas comuns de resposta."""
 
-from typing import Any, Optional
+from datetime import datetime
 
 from pydantic import BaseModel
 
 
-class ResponseBase(BaseModel):
-    """Resposta padrão com status e mensagem."""
+class ApiResponse(BaseModel):
+    """Padroniza respostas da API."""
+
     success: bool = True
-    message: str = "ok"
+    data: dict | list | None = None
+    message: str = ""
+    timestamp: str = datetime.utcnow().isoformat()
 
 
-class ErrorMessage(ResponseBase):
-    """Resposta de erro para a API."""
+class ErrorResponse(BaseModel):
+    """Resposta de erro padronizada."""
+
     success: bool = False
-
     error: str
-    detail: Optional[str] = None
-
-
-class PaginatedResponse(BaseModel):
-    """Resposta com paginação simples."""
-    total: int
-    page: int
-    per_page: int
-    items: list[Any]
-
-
-class ProviderInfo(BaseModel):
-    """Informações sobre um provider de IA."""
-    id: str
-    name: str
-    description: str
-    enabled: bool = True
-
-    class Config:
-        from_attributes = True
+    detail: str | None = None

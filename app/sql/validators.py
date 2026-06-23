@@ -3,6 +3,8 @@
 import logging
 import re
 
+from ..core.exceptions import SQLValidationError
+
 logger = logging.getLogger("ia_api.sql_validator")
 
 
@@ -32,13 +34,13 @@ _DANGEROUS_REGEX = re.compile("|".join(_DANGEROUS_PATTERNS), re.IGNORECASE)
 
 def validate_sql(query: str) -> bool:
     """Valida se a query SQL é segura (apenas SELECT).
-    
+
     Args:
         query: String contendo a query SQL.
-        
+
     Returns:
         True se a query for segura.
-        
+
     Raises:
         SQLValidationError: Se a query contiver comandos perigosos.
     """

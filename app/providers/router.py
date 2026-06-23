@@ -2,10 +2,10 @@
 
 import logging
 
-from app.providers.base import BaseProvider
-from app.providers.corporate_provider import CorporateProvider
-from app.providers.local_provider import LocalProvider
-from app.providers.online_provider import OnlineProvider
+from .base import BaseProvider
+from .corporate_provider import CorporateProvider
+from .local_provider import LocalProvider
+from .online_provider import OnlineProvider
 
 logger = logging.getLogger("ia_api.provider_router")
 
@@ -20,12 +20,10 @@ class ProviderRouter:
 
     def _register_defaults(self) -> None:
         """Registra os providers disponíveis por padrão."""
-        # Sempre disponível
         local = LocalProvider()
         self._providers[local.provider_id] = local
         logger.info("Registered provider: %s", local.provider_id)
 
-        # Disponíveis via configuração (desabilitados por padrão)
         online = OnlineProvider()
         self._providers[online.provider_id] = online
         logger.info("Registered provider: %s", online.provider_id)

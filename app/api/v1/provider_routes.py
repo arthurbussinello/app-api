@@ -1,49 +1,22 @@
-"""Rotas de providers de IA."""
+"""Rotas para listar e consultar providers de IA."""
 
-from fastapi import APIRouter, Depends, Request
+import logging
 
-router = APIRouter()
+from api.v1 import router as v1_router
+from schemas.common import ApiResponse
+from providers.router import ProviderRouter
+
+logger = logging.getLogger("ia_api.providers")
+
+router_provider = ProviderRouter()
 
 
-@router.get("/v1/providers")
-async def list_providers(request: Request) -> dict:
-    """Lista os providers de IA disponíveis.
-    
-    Returns:
-        Dict com lista de providers e contagem total.
-    """
-    from app.providers.router import ProviderRouter
-
-    router_instance = ProviderRouter(default_provider="local")
-    providers = router_instance.list_providers()
-
+@v1_router.get("/providers", response_model=ApiResponse)
+def list_providers():
+    """Retorna lista de providers disponíveis."""
+    providers = router_provider.list_providers()
     return {
-        "providers": providers,
-        "total": len(providers),
+        "success": True,
+        "data": providers,
+        "message": "Providers retrieved successfully",
     }
-
-
-@router.get("/v1/providers/{provider_id}")
-async def get_provider(provider_id: str, request: Request) -> dict:
-    """Retorna informações de um provider específico.
-    
-    Args:
-        provider_id: Identificador do provider (ex: 'local', 'online', 'corporate').
-    
-    Returns:
-        Dict com status e dados do provider ou erro 404 se não encontrado.
-    """
-    from app.providers.router import ProviderRouter
-
-    router_instance = ProviderRouter(default_provider="local")
-    try:
-        prov = router_instance.get_provider(provider_id)
-        return {
-            "status": "ok",
-            "provider": {
-                "id": prov.provider_id,
-                "health": prov.health_check(),
-            },
-        }
-    except Exception:
-        return {"status": "error", "detail": f"Provider '{provider_id}' não encontrado"}, 404

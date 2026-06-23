@@ -11,17 +11,21 @@ class BaseProvider(ABC):
         return "base"
 
     @abstractmethod
-    def complete(self, prompt: str, **kwargs) -> str:
-        """Retorna uma resposta simples a partir de um prompt."""
+    def complete(self, prompt: str, **kwargs) -> dict:
+        """Retorna uma resposta simples a partir de um prompt.
+
+        Returns:
+            Dict com chave 'message' contendo {'role': str, 'content': str}.
+        """
         ...
 
     @abstractmethod
     def chat(self, messages: list[dict], **kwargs) -> dict:
         """Retorna uma resposta de chat a partir de mensagens.
-        
+
         Args:
             messages: Lista de dicts com 'role' e 'content'.
-        
+
         Returns:
             Dict com chave 'message' contendo {'role': str, 'content': str}.
         """

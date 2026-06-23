@@ -1,85 +1,34 @@
 """Rotas de agentes."""
 
-from fastapi import APIRouter, Request
-from pydantic import BaseModel
+import logging
 
-router = APIRouter()
+from fastapi import Depends
 
-
-class AgentRunRequest(BaseModel):
-    """Requisição para executar um agente."""
-    input: str
-    params: dict = {}
+from api.v1 import router as v1_router
+from schemas.common import ApiResponse
+from services.agent_service import agent_service
 
 
-@router.post("/v1/agents/{agent_id}/run")
-async def run_agent(
-    agent_id: str,
-    req: AgentRunRequest,
-    request: Request,
-) -> dict:
-    """Executa um agente com a entrada fornecida.
-    
-    Args:
-        agent_id: Identificador do agente (ex: 'research').
-        req: Requisição contendo input e params opcionais.
-        request: Objeto da FastAPI com contexto da requisição.
-    
-    Returns:
-        Dict com output, iterations_used e metadata do agente.
-    """
-    from app.services.agent_service import AgentService
-    from app.core.logging_config import setup_logger
-
-    logger = setup_logger("ia_api.agent_routes")
-
-    agent_service = AgentService()
-
-    try:
-        result = agent_service.run_agent(agent_id, req.input, req.params)
-        response = {
-            "agent_id": agent_id,
-            "input": req.input,
-            "output": result.get("output", ""),
-            "iterations_used": result.get("iterations_used", 0),
-            "success": True,
-            "metadata": result.get("metadata", {}),
-        }
-        logger.info("Agent '%s' run completed: %d iterations", agent_id, result.get("iterations_used", 0))
-        return response
-
-    except ValueError as e:
-        return {"status": "error", "detail": str(e)}, 404
+logger = logging.getLogger("ia_api.agents")
 
 
-@router.get("/v1/agents")
-async def list_agents() -> dict:
-    """Lista os agentes disponíveis."""
-    from app.services.agent_service import AgentService
-
-    agent_service = AgentService()
-    agents = agent_service.list_agents_info()
-
+@v1_router.post("/agents/{agent_id}/run", response_model=ApiResponse)
+def run_agent(agent_id: str):
+    """Executa um agente pelo ID."""
+    result = agent_service.run(agent_id)
     return {
-        "agents": agents,
-        "total": len(agents),
+        "success": True,
+        "data": result,
+        "message": f"Agente '{agent_id}' executado com sucesso",
     }
 
 
-@router.get("/v1/agents/{agent_id}")
-async def get_agent(agent_id: str) -> dict:
-    """Retorna informações sobre um agente específico."""
-    from app.services.agent_service import AgentService
-
-    agent_service = AgentService()
-    agent = agent_service.get_agent(agent_id)
-
-    if agent is None:
-        return {"status": "error", "detail": f"Agente '{agent_id}' não encontrado"}, 404
-
-    info = agent.info() if hasattr(agent, "info") else {}
-    info["agent_id"] = agent_id
+@v1_router.post("/agents/{agent_id}/run-with-input", response_model=ApiResponse)
+def run_agent_with_input(agent_id: str, user_input: str = ""):
+    """Executa um agente com input do usuário."""
+    result = agent_service.run(agent_id, user_input=user_input)
     return {
-        "status": "ok",
-        "agent": info,
+        "success": True,
+        "data": result,
+        "message": f"Agente '{agent_id}' executado com sucesso",
     }

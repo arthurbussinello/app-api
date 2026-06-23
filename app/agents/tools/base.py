@@ -20,10 +20,10 @@ class BaseTool(ABC):
     @abstractmethod
     def execute(self, arguments: dict) -> str:
         """Executa a ferramenta com os argumentos fornecidos.
-        
+
         Args:
             arguments: Dict com parâmetros de entrada.
-        
+
         Returns:
             String com o resultado da execução.
         """
@@ -49,16 +49,16 @@ class SQLReadOnlyTool(BaseTool):
 
     def execute(self, arguments: dict) -> str:
         """Executa uma query SELECT simulada.
-        
+
         Em produção, conectaria ao SQL Server via pyodbc.
-        
+
         Args:
             arguments: Dict com chave 'query' contendo a query SQL.
-        
+
         Returns:
             String formatada com os resultados (simulados).
         """
-        from app.sql.validators import validate_sql
+        from ...sql.validators import validate_sql
 
         query = arguments.get("query", "")
         if not query:
@@ -87,7 +87,7 @@ TOOL_REGISTRY: dict[str, BaseTool] = {
 }
 
 
-def get_tool(name: str) -> BaseTool | None:
+def get_tool(name: str):
     """Retorna uma ferramenta pelo nome."""
     return TOOL_REGISTRY.get(name.lower())
 

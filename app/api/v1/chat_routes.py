@@ -1,80 +1,34 @@
-"""Rotas de chat completions."""
+"""Rotas de chat (completions)."""
 
-from fastapi import APIRouter, Depends, Request
-from pydantic import BaseModel
+import logging
+from typing import List
 
-router = APIRouter()
+from pydantic import BaseModel, Field
 
-
-class ChatCompletionRequest(BaseModel):
-    """Requisição de completions de chat."""
-    messages: list[dict] = []
-    provider: str | None = None
-    model: str | None = None
-    temperature: float = 0.7
-    max_tokens: int = 1024
+from api.v1 import router as v1_router
+from schemas.chat import ChatMessage, ChatResponse
+from services.chat_service import chat_service
 
 
-class ChatCompletionResponse(BaseModel):
-    """Resposta de completions de chat."""
-    id: str
-    created_at: str
-    provider: str
-    model: str
-    message: dict
-    usage: dict = {}
+logger = logging.getLogger("ia_api.chat")
 
 
-@router.post("/v1/chat/completions")
-async def chat_completions(
-    req: ChatCompletionRequest,
-    request: Request,
-) -> dict:
-    """Envia mensagens ao provider e retorna a resposta.
-    
-    Args:
-        req: Requisição contendo messages, provider, model, etc.
-        request: Objeto da FastAPI com contexto da requisição.
-    
-    Returns:
-        ChatCompletionResponse com a mensagem do assistente.
-    """
-    from app.providers.router import ProviderRouter
-    from app.core.logging_config import setup_logger
+class CompletionBody(BaseModel):
+    messages: List[ChatMessage] = Field(..., description="Histórico de mensagens")
+    provider: str | None = Field("local", description="Provider a ser usado")
+    model: str | None = Field(None, description="Modelo específico (override)")
+    temperature: float | None = Field(0.7, ge=0, le=2)
 
-    logger = setup_logger("ia_api.chat_routes")
 
-    router_instance = ProviderRouter(default_provider="local")
-    provider = router_instance.get_provider(req.provider)
+@v1_router.post("/chat/completions", response_model=ChatResponse)
+def chat_completions(body: CompletionBody):
+    """Endpoint de completions estilo OpenAI."""
+    messages_list = [m.model_dump() for m in body.messages]
 
-    result = provider.chat(req.messages)
-    message = result.get("message", {"role": "assistant", "content": ""})
-
-    response = {
-        "id": f"chat_{req.model or 'default'}_{len(req.messages)}",
-        "created_at": "2026-01-01T00:00:00Z",
-        "provider": provider.provider_id,
-        "model": req.model or "mock",
-        "message": message,
-        "usage": {"prompt_tokens": len(req.messages), "completion_tokens": 1},
-    }
-
-    logger.info(
-        "Chat completion: provider=%s messages=%d",
-        provider.provider_id,
-        len(req.messages),
+    result = chat_service.complete(
+        messages=messages_list,
+        provider=body.provider,
+        model=body.model,
+        temperature=body.temperature,
     )
-
-    return response
-
-
-@router.get("/v1/chat/models")
-async def list_chat_models() -> dict:
-    """Lista os modelos de chat disponíveis (simulado)."""
-    return {
-        "models": [
-            {"id": "mock-local", "name": "Local Mock v0.1", "provider": "local"},
-            {"id": "mock-online", "name": "Online Mock v0.1", "provider": "online"},
-            {"id": "mock-corporate", "name": "Corporate Mock v0.1", "provider": "corporate"},
-        ],
-    }
+    return ChatResponse(**result)

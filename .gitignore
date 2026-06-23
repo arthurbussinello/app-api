@@ -9,3 +9,6 @@ app/__pycache__/
 dist/
 build/
 .mypy_cache/
+_tmp_move/
+projeto.zip.png
+.DS_Store

@@ -1,36 +1,28 @@
-"""Provider local — respostas mockadas sem dependências externas."""
+"""Provider local mockado — sem conexão externa."""
 
-import random
-from typing import Optional
+import logging
+
+from providers.base import BaseProvider
+
+logger = logging.getLogger("ia_api.providers.local")
 
 
 class LocalProvider(BaseProvider):
-    """Provider que simula respostas de IA localmente."""
+    """Provider que retorna respostas mockadas localmente."""
 
     @property
     def provider_id(self) -> str:
         return "local"
 
-    # Respostas fixas para demonstração.
-    _RESPONSES = [
-        "Resposta mockada do provider local: operação concluída com sucesso.",
-        "Provider local ativo. Nenhum modelo de IA real foi invocado.",
-        "Simulação local: o prompt foi processado internamente.",
-        "Resposta gerada pelo LocalProvider — sem conexão externa.",
-    ]
-
-    def complete(self, prompt: str, **kwargs) -> str:
-        """Retorna uma resposta mockada aleatória."""
-        return random.choice(self._RESPONSES)
+    def complete(self, prompt: str, **kwargs) -> dict:
+        logger.info("LocalProvider respondendo (mock): %s", prompt[:80])
+        return {
+            "message": {"role": "assistant", "content": f"(local mock) {prompt}"},
+        }
 
     def chat(self, messages: list[dict], **kwargs) -> dict:
-        """Retorna uma mensagem mockada baseada nas entradas."""
-        last = messages[-1] if messages else {}
-        content = (
-            f"Resposta local ao prompt: '{last.get('content', '')}'"
-        )
-        return {"message": {"role": "assistant", "content": content}}
-
-    def health_check(self) -> dict:
-        """Sempre saudável — não depende de rede."""
-        return {"status": "ok", "provider": self.provider_id}
+        logger.info("LocalProvider chat (mock): %d mensagens", len(messages))
+        last = messages[-1].get("content", "") if messages else ""
+        return {
+            "message": {"role": "assistant", "content": f"(local mock) {last}"},
+        }

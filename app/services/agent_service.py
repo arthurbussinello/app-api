@@ -3,8 +3,8 @@
 import logging
 from datetime import UTC, datetime
 
-from app.agents.research_agent import ResearchAgent
-from app.agents.runner import AgentRunner
+from ..agents.research_agent import ResearchAgent
+from ..agents.runner import AgentRunner
 
 logger = logging.getLogger("ia_api.agent_service")
 
@@ -34,15 +34,15 @@ class AgentService:
 
     def run_agent(self, agent_id: str, input_data: str, params: dict | None = None) -> dict:
         """Executa um agente e retorna o resultado.
-        
+
         Args:
             agent_id: Identificador do agente (ex: 'research').
             input_data: Entrada principal para o agente.
             params: Parâmetros opcionais de configuração.
-        
+
         Returns:
             Dict com output, iterations_used e metadata.
-        
+
         Raises:
             ValueError: Se o agent não for encontrado.
         """

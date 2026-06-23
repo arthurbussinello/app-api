@@ -1,77 +1,55 @@
 """Rotas de ferramentas."""
 
-from fastapi import APIRouter, Request
-from pydantic import BaseModel
+import logging
 
-router = APIRouter()
-
-
-class ToolExecuteRequest(BaseModel):
-    """Requisição para executar uma ferramenta."""
-    tool_name: str
-    arguments: dict = {}
+from api.v1 import router as v1_router
+from schemas.common import ApiResponse
 
 
-@router.post("/v1/tools/{tool_name}/execute")
-async def execute_tool(
-    tool_name: str,
-    req: ToolExecuteRequest | None = None,
-) -> dict:
-    """Executa uma ferramenta com os argumentos fornecidos.
-    
-    Args:
-        tool_name: Nome da ferramenta (ex: 'sql_readonly').
-        req: Requisição contendo arguments opcionais.
-    
-    Returns:
-        Dict com resultado da execução da ferramenta.
-    """
-    from app.agents.tools.base import get_tool, list_tools as _list_tools
+logger = logging.getLogger("ia_api.tools")
 
-    if not tool_name or not get_tool(tool_name):
-        available = ", ".join(_list_tools())
+
+@v1_router.get("/tools", response_model=ApiResponse)
+def list_tools():
+    """Retorna lista de ferramentas disponíveis."""
+    from agents.tools.base import ToolRegistry
+
+    registry = ToolRegistry()
+    tools = registry.list_tools()
+    return {
+        "success": True,
+        "data": tools,
+        "message": "Tools retrieved successfully",
+    }
+
+
+@v1_router.post("/tools/{name}/execute", response_model=ApiResponse)
+def execute_tool(name: str, params: dict = None):
+    """Executa uma ferramenta pelo nome."""
+    from agents.tools.base import ToolRegistry
+
+    registry = ToolRegistry()
+    tool = registry.get_tool(name)
+
+    if not tool:
         return {
-            "status": "error",
-            "detail": f"Ferramenta '{tool_name}' não encontrada. Disponíveis: {available}",
-        }, 404
+            "success": False,
+            "data": None,
+            "message": f"Tool '{name}' não encontrada",
+        }
 
-    tool = get_tool(tool_name)
-    arguments = (req.arguments if req else {}).get("arguments", {})
-    result = tool.execute(arguments)
-
-    return {
-        "status": "ok",
-        "tool": tool.tool_name,
-        "arguments": arguments,
-        "result": result,
-    }
-
-
-@router.get("/v1/tools")
-async def list_tools() -> dict:
-    """Lista as ferramentas disponíveis."""
-    from app.agents.tools.base import list_tools
-
-    tools = list_tools()
-    return {
-        "tools": tools,
-        "total": len(tools),
-    }
-
-
-@router.get("/v1/tools/{tool_name}")
-async def get_tool(tool_name: str) -> dict:
-    """Retorna informações sobre uma ferramenta específica."""
-    from app.agents.tools.base import get_tool
-
-    t = get_tool(tool_name)
-    if t is None:
-        return {"status": "error", "detail": f"Ferramenta '{tool_name}' não encontrada"}, 404
-
-    return {
-        "status": "ok",
-        "tool": {
-            "name": t.tool_name,
-            "description": t.tool_description,
-        },
-    }
+    try:
+        result = tool.execute(params or {})
+        logger.info("Tool execute → %s", name)
+        return {
+            "success": True,
+            "data": result,
+            "message": f"Ferramenta '{name}' executada com sucesso",
+        }
+    except Exception as exc:
+        logger.error("Tool error → %s: %s", name, exc)
+        return {
+            "success": False,
+            "data": None,
+            "message": f"Erro ao executar ferramenta '{name}': {exc}",
+        }

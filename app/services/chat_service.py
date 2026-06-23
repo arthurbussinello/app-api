@@ -3,7 +3,7 @@
 import logging
 from datetime import UTC, datetime
 
-from app.providers.router import ProviderRouter
+from ..providers.router import ProviderRouter
 
 logger = logging.getLogger("ia_api.chat_service")
 
@@ -16,11 +16,11 @@ class ChatService:
 
     def complete(self, messages: list[dict], provider: str | None = None) -> dict:
         """Envia mensagens ao provider e retorna a resposta.
-        
+
         Args:
             messages: Lista de dicts com 'role' e 'content'.
             provider: Nome do provider ou None para usar o padrão.
-        
+
         Returns:
             Dict contendo response_id, created_at, provider, model e message.
         """
