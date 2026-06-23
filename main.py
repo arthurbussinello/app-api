@@ -5,10 +5,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.core.logging_config import setup_logging
+from app.core.logging_config import setup_logger
 from app.core.exceptions import register_exception_handlers
 
-setup_logging()
+setup_logger("ia_api")
 
 app = FastAPI(
     title="api-ia",
