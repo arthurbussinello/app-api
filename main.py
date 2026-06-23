@@ -28,7 +28,7 @@ register_exception_handlers(app)
 
 from app.api.v1 import health_routes, provider_routes, chat_routes, agent_routes, tools_routes
 
-app.include_router(health_routes.router, prefix="/health", tags=["health"])
+app.include_router(health_routes.router, tags=["health"])
 app.include_router(provider_routes.router, prefix="/v1", tags=["providers"])
 app.include_router(chat_routes.router, prefix="/v1", tags=["chat"])
 app.include_router(agent_routes.router, prefix="/v1", tags=["agents"])

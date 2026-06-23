@@ -2,16 +2,19 @@
 
 import logging
 
-from api.v1 import router as v1_router
-from schemas.common import ApiResponse
-from providers.router import ProviderRouter
+from fastapi import APIRouter
+
+from app.schemas.common import ApiResponse
+from app.providers.router import ProviderRouter
+
+router = APIRouter()
 
 logger = logging.getLogger("ia_api.providers")
 
 router_provider = ProviderRouter()
 
 
-@v1_router.get("/providers", response_model=ApiResponse)
+@router.get("/providers", response_model=ApiResponse)
 def list_providers():
     """Retorna lista de providers disponíveis."""
     providers = router_provider.list_providers()

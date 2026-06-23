@@ -3,12 +3,14 @@
 import logging
 from typing import List
 
+from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-from api.v1 import router as v1_router
-from schemas.chat import ChatMessage, ChatResponse
-from services.chat_service import chat_service
+from app.schemas.chat import ChatMessage, ChatResponse
+from app.services.chat_service import ChatService
+from app.providers.router import ProviderRouter
 
+router = APIRouter()
 
 logger = logging.getLogger("ia_api.chat")
 
@@ -20,7 +22,10 @@ class CompletionBody(BaseModel):
     temperature: float | None = Field(0.7, ge=0, le=2)
 
 
-@v1_router.post("/chat/completions", response_model=ChatResponse)
+chat_service = ChatService(router=ProviderRouter())
+
+
+@router.post("/chat/completions", response_model=ChatResponse)
 def chat_completions(body: CompletionBody):
     """Endpoint de completions estilo OpenAI."""
     messages_list = [m.model_dump() for m in body.messages]

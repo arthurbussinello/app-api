@@ -2,20 +2,20 @@
 
 import logging
 
-from api.v1 import router as v1_router
-from schemas.common import ApiResponse
+from fastapi import APIRouter
 
+from app.schemas.common import ApiResponse
+from app.agents.tools.base import get_tool, list_tools
+
+router = APIRouter()
 
 logger = logging.getLogger("ia_api.tools")
 
 
-@v1_router.get("/tools", response_model=ApiResponse)
-def list_tools():
+@router.get("/tools", response_model=ApiResponse)
+def tools_list():
     """Retorna lista de ferramentas disponíveis."""
-    from agents.tools.base import ToolRegistry
-
-    registry = ToolRegistry()
-    tools = registry.list_tools()
+    tools = list_tools()
     return {
         "success": True,
         "data": tools,
@@ -23,13 +23,10 @@ def list_tools():
     }
 
 
-@v1_router.post("/tools/{name}/execute", response_model=ApiResponse)
-def execute_tool(name: str, params: dict = None):
+@router.post("/tools/{name}/execute", response_model=ApiResponse)
+def execute_tool(name: str, params: dict | None = None):
     """Executa uma ferramenta pelo nome."""
-    from agents.tools.base import ToolRegistry
-
-    registry = ToolRegistry()
-    tool = registry.get_tool(name)
+    tool = get_tool(name)
 
     if not tool:
         return {
@@ -43,7 +40,7 @@ def execute_tool(name: str, params: dict = None):
         logger.info("Tool execute → %s", name)
         return {
             "success": True,
-            "data": result,
+            "data": {"result": result},
             "message": f"Ferramenta '{name}' executada com sucesso",
         }
     except Exception as exc:

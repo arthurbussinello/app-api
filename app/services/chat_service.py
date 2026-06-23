@@ -3,7 +3,7 @@
 import logging
 from datetime import UTC, datetime
 
-from ..providers.router import ProviderRouter
+from app.providers.router import ProviderRouter
 
 logger = logging.getLogger("ia_api.chat_service")
 
@@ -14,12 +14,20 @@ class ChatService:
     def __init__(self, router: ProviderRouter):
         self.router = router
 
-    def complete(self, messages: list[dict], provider: str | None = None) -> dict:
+    def complete(
+        self,
+        messages: list[dict],
+        provider: str | None = None,
+        model: str | None = None,
+        temperature: float | None = None,
+    ) -> dict:
         """Envia mensagens ao provider e retorna a resposta.
 
         Args:
             messages: Lista de dicts com 'role' e 'content'.
             provider: Nome do provider ou None para usar o padrão.
+            model: Modelo específico ou None para usar o padrão do provider.
+            temperature: Temperatura de aleatoriedade (0-2).
 
         Returns:
             Dict contendo response_id, created_at, provider, model e message.

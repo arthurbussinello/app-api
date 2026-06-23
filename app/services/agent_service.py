@@ -3,8 +3,8 @@
 import logging
 from datetime import UTC, datetime
 
-from ..agents.research_agent import ResearchAgent
-from ..agents.runner import AgentRunner
+from app.agents.research_agent import ResearchAgent
+from app.agents.runner import AgentRunner
 
 logger = logging.getLogger("ia_api.agent_service")
 
@@ -32,7 +32,7 @@ class AgentService:
             result.append(info)
         return result
 
-    def run_agent(self, agent_id: str, input_data: str, params: dict | None = None) -> dict:
+    def run_agent(self, agent_id: str, input_data: str = "", params: dict | None = None) -> dict:
         """Executa um agente e retorna o resultado.
 
         Args:
@@ -41,7 +41,7 @@ class AgentService:
             params: Parâmetros opcionais de configuração.
 
         Returns:
-            Dict com output, iterations_used e metadata.
+            Dict com output, iterationsUsed e metadata.
 
         Raises:
             ValueError: Se o agent não for encontrado.
@@ -58,3 +58,16 @@ class AgentService:
             result.get("iterations_used", 0),
         )
         return result
+
+    def run(self, agent_id: str, user_input: str = "") -> dict:
+        """Alias para run_agent — usado pelas rotas."""
+        try:
+            return self.run_agent(agent_id, input_data=user_input)
+        except ValueError as exc:
+            # Retorna resultado com erro controlado em vez de propagar exceção
+            logger.warning("Agent not found '%s': %s", agent_id, exc)
+            return {
+                "output": str(exc),
+                "iterations_used": 0,
+                "metadata": {"error": True},
+            }

@@ -2,7 +2,7 @@
 
 import logging
 
-from providers.base import BaseProvider
+from app.providers.base import BaseProvider
 
 logger = logging.getLogger("ia_api.providers.local")
 

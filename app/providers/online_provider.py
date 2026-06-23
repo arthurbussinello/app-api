@@ -2,8 +2,8 @@
 
 import logging
 
-from ..config import settings
-from .base import BaseProvider
+from app.config import settings
+from app.providers.base import BaseProvider
 
 logger = logging.getLogger("ia_api.providers.online")
 

@@ -2,10 +2,10 @@
 
 import logging
 
-from .base import BaseProvider
-from .corporate_provider import CorporateProvider
-from .local_provider import LocalProvider
-from .online_provider import OnlineProvider
+from app.providers.base import BaseProvider
+from app.providers.corporate_provider import CorporateProvider
+from app.providers.local_provider import LocalProvider
+from app.providers.online_provider import OnlineProvider
 
 logger = logging.getLogger("ia_api.provider_router")
 

@@ -45,12 +45,12 @@ app.add_middleware(
 )
 
 
-# --- Montagem dos routers na rota /v1 ---
-app.include_router(health_router, prefix="/")
-app.include_router(provider_router, prefix="/")
-app.include_router(chat_router, prefix="/")
-app.include_router(agent_router, prefix="/")
-app.include_router(tools_router, prefix="/")
+# --- Montagem dos routers ---
+app.include_router(health_router)
+app.include_router(provider_router)
+app.include_router(chat_router)
+app.include_router(agent_router)
+app.include_router(tools_router)
 
 
 @app.middleware("http")

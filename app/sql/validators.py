@@ -3,7 +3,7 @@
 import logging
 import re
 
-from ..core.exceptions import SQLValidationError
+from app.core.exceptions import SQLValidationError
 
 logger = logging.getLogger("ia_api.sql_validator")
 

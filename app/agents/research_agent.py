@@ -2,9 +2,9 @@
 
 import logging
 
-from .base import BaseAgent
-from .prompts import RESEARCH_AGENT_PROMPT
-from .tools.base import get_tool, list_tools as _list_tools
+from app.agents.base import BaseAgent
+from app.agents.prompts import RESEARCH_AGENT_PROMPT
+from app.agents.tools.base import get_tool, list_tools as _list_tools
 
 logger = logging.getLogger("ia_api.research_agent")
 
