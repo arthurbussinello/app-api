@@ -1,6 +1,6 @@
-# API IA — Hub Corporativo de Inteligência Artificial
+# API IA — Central Corporativa de Inteligência Artificial
 
-Hub interno de inteligência artificial construído com **FastAPI** em Python. Projetado para ser leve, simples e fácil de evoluir no ambiente corporativo com internet bloqueada.
+Central interna de inteligência artificial construída com **FastAPI** em Python. Projetada para ser leve, simples e fácil de evoluir no ambiente corporativo com internet bloqueada.
 
 ## 📋 Índice
 
@@ -19,7 +19,7 @@ Hub interno de inteligência artificial construído com **FastAPI** em Python. P
 
 ```
 ┌─────────────┐     ┌──────────────┐     ┌──────────────┐
-│   Clients   │────▶│  FastAPI Hub │────▶│  Providers   │
+│   Clients   │────▶│  FastAPI Core│────▶│  Providers   │
 │ (apps internos) │    │  (API IA)    │     │  Local/Online  │
 └─────────────┘     └──────────────┘     │  Corporate     │
                                         └──────┬───────┘
