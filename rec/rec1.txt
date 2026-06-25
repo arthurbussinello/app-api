@@ -1,0 +1,108 @@
+### app/models/models.py
+
+from sqlalchemy import Column, String, DateTime, ForeignKey, Text
+from sqlalchemy.dialects.mssql import UNIQUEIDENTIFIER
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from app.core.database import Base
+
+class ChatSession(Base):
+    __tablename__ = "ChatSessions"
+
+    SessionId = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: func.newid())
+    UserId = Column(String(100), nullable=False)
+    ModelName = Column(String(50))
+    CreatedAt = Column(DateTime, server_default=func.now())
+    UpdatedAt = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    messages = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan")
+
+class ChatMessage(Base):
+    __tablename__ = "ChatMessages"
+
+    MessageId = Column(UNIQUEIDENTIFIER, primary_key=True, default=lambda: func.newid())
+    SessionId = Column(UNIQUEIDENTIFIER, ForeignKey("ChatSessions.SessionId"), nullable=False)
+    Role = Column(String(20), nullable=False) # 'user', 'assistant', 'system'
+    Content = Column(Text, nullable=False)
+    CreatedAt = Column(DateTime, server_default=func.now())
+
+    session = relationship("ChatSession", back_populates="messages")
+
+
+
+# app/repositories/message_repository.py
+
+from sqlalchemy.orm import Session
+from app.models.models import ChatSession, ChatMessage
+from typing import List
+
+class MessageRepository:
+    def __init__(self, db: Session):
+        self.db = db
+
+    def create_session(self, user_id: str, model_name: str) -> ChatSession:
+        """Cria uma nova sessão de chat e retorna o objeto da sessão."""
+        new_session = ChatSession(UserId=user_id, ModelName=model_name)
+        self.db.add(new_session)
+        self.db.commit()
+        self.db.refresh(new_session)
+        return new_session
+
+    def save_message(self, session_id: str, role: str, content: str):
+        """Salva uma mensagem individual vinculada a uma sessão."""
+        new_msg = ChatMessage(
+            SessionId=session_id,
+            Role=role,
+            Content=content
+        )
+        self.db.add(new_msg)
+        self.db.commit()
+
+    def get_history(self, session_id: str) -> List[dict]:
+        """Busca todo o histórico de uma sessão e retorna como lista de dicionários."""
+        messages = self.db.query(ChatMessage).filter(
+            ChatMessage.SessionId == session_id
+        ).order_by(ChatMessage.CreatedAt).all()
+        
+        return [{"role": m.Role, "content": m.Content} for m in messages]
+
+
+
+# app/services/chat_service.py
+
+from typing import List, Dict
+from app.providers.corporate_provider import CorporateProvider
+from app.repositories.message_repository import MessageRepository
+from sqlalchemy.orm import Session
+
+class ChatService:
+    def __init__(self, db: Session):
+        """
+        Inicializa o serviço com a sessão do banco de dados e o provedor corporativo.
+        """
+        self.db = db
+        self.provider = CorporateProvider()
+        self.repo = MessageRepository(db)
+
+    def process_chat(self, session_id: str, user_input: str) -> str:
+        """
+        Processa uma mensagem de chat completa:
+        1. Busca o histórico da sessão no banco de dados.
+        2. Monta a lista de mensagens (Contexto).
+        3. Chama a Bridge corporativa para obter a resposta da IA.
+        4. Salva a resposta da IA no banco de dados.
+        5. Retorna apenas o texto da resposta.
+        """
+        # 1. Buscar histórico existente
+        history = self.repo.get_history(session_id)
+        
+        # 2. Montar a lista de mensagens para o provedor (incluindo a nova pergunta)
+        messages = history + [{"role": "user", "content": user_input}]
+        
+        # 3. Chamar o Provedor (que já lida com Token, Proxy e SSL)
+        ai_response = self.provider.get_chat_completion(model="gpt4", messages=messages)
+        
+        # 4. Persistir a resposta da IA no banco de dados
+        self.repo.save_message(session_id, "assistant", ai_response)
+        
+        return ai_response
